@@ -1,9 +1,0 @@
-#Loadguard Dashboard
-This is a dashboard for Loadguard's AI-enabled proactive alerting and supply chain risk assesment systems. 
-
-Loadguard is a system (with both hardware and software components) made to help produce businesses exporting from Latin America into the US/EU assess and detect:
-- Cargo quality (for claims requests, i.e., when importers get refunds from exporters or transit liners for cargo that arrives spoiled)
-- Phytosanitary compliance (i.e., detecting plant disease before the container arrives to avoid hefty agricultural security fines)
-- Contamination compliance (varied, e.g., narcotics smuggling, a similar mechanism as the above)
-
-All rights reserved. Patent in progress.
