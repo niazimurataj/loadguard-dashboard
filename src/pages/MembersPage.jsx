@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import Chatbot from '../components/Chatbot';
 import AlertingChain from '../components/AlertingChain';
-import MembersMap from '../components/MembersMap';
+import dynamic from 'next/dynamic';
+import styles from './MembersPage.module.css';
+
+const MembersMap = dynamic(() => import('../components/MembersMap'), {
+  ssr: false,
+});
 
 import { Button } from "@/components/ui/button";
 import {
@@ -56,15 +61,22 @@ const DataTable = () => {
   ];
 
   const [data, setData] = useState(initialData);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prevData => 
-        prevData.map(row => ({...row, temperature: parseFloat((row.temperature + (Math.random() - 0.5) * 0.1).toFixed(1))}))
-      );
-    }, 2000);
-    return () => clearInterval(interval);
+    setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      const interval = setInterval(() => {
+        setData(prevData => 
+          prevData.map(row => ({...row, temperature: parseFloat((row.temperature + (Math.random() - 0.5) * 0.1).toFixed(1))}))
+        );
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isMounted]);
 
   const handleBlockedFeatureClick = () => {
     toast("This feature is blocked right now! Check back later");

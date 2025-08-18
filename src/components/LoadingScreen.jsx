@@ -34,7 +34,7 @@ const LoadingScreen = () => {
   return (
     <div className={`${styles.loadingScreen} ${!isVisible ? styles.hidden : ''}`}>
       <h1 className={`${styles.header} ${styles.textFlip}`}>{messages[messageIndex]}</h1>
-      <img src={logo} alt="Loading..." className={styles.logo} />
+      <img src={logo.src} alt="Loading..." className={styles.logo} />
     </div>
   );
 };
