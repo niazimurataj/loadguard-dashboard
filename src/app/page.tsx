@@ -56,44 +56,19 @@ import { cn } from '@/lib/utils';
 
 // Data for the table
 const devices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  // Add more data as needed
+  // TODO 
+  // fetch from API later
 ];
 
 export default function Home() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  
   const navLinks = [
-    {
-      title: 'Dashboard',
-      href: '/',
-      icon: LayoutDashboard,
-      variant: 'default' as 'default' | 'ghost',
-    },
-    {
-      title: 'Users',
-      href: '#',
-      icon: Users,
-      variant: 'ghost' as 'default' | 'ghost',
-    },
-    {
-      title: 'Settings',
-      href: '#',
-      icon: Settings,
-      variant: 'ghost' as 'default' | 'ghost',
-    },
-  ];
+    { title: 'Dashboard', href: '/', variant: 'default' },
+    { title: 'Devices', href: '/devices', variant: 'ghost' },
+    { title: 'Agent', href: '/agent', variant: 'ghost' },
+    { title: 'Settings', href: '/settings', variant: 'ghost' },
+    { title: 'Alerts', href: '/alerts', variant: 'ghost' },
+  ] as const;
 
   //stop wasting time with vibe coding
   // just use libraries and components

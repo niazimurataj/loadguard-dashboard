@@ -1,5 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+// previously, define env vars for AWS 
+// make sure you run `npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb`
 
 // Create DynamoDB client (reused across requests)
 const client = new DynamoDBClient({
