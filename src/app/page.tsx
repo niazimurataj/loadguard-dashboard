@@ -6,6 +6,10 @@ import {
 } from "@/components/ui/sidebar"
 
 import Dashboard from "./dashboard/page"
+import Devices from "./devices/page"
+import Alerts from "./alerts/page"
+import Agent from "./agent/page"
+import Settings from "./settings/page"
 
 export const iframeHeight = "800px"
 

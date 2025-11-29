@@ -1,5 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  ScanCommand,
+} from "@aws-sdk/lib-dynamodb";
+
 // previously, define env vars for AWS 
 // make sure you run `npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb`
 
@@ -49,3 +54,26 @@ export async function POST(request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const result = await ddb.send(
+      new ScanCommand({
+        TableName: process.env.DDB_TABLE_NAME || "MonarchData",
+        Limit: 50, // cap to avoid huge responses; tweak as needed
+      })
+    );
+
+    return new Response(
+      JSON.stringify({ items: result.Items ?? [] }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error(err);
+    return new Response(
+      JSON.stringify({ error: "DynamoDB scan failed" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
