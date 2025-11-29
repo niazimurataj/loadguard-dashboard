@@ -147,3 +147,143 @@ Edge ➜ **rx Lambda** ➜ **MonarchData** ➜ **pp Lambda** (enrich + flags) �
 - [ ] Expose minimal API for dashboard; wire device list/detail + charts + map.
 - [ ] Alerts feed in UI; send one routed alert end‑to‑end.
 - [ ] Agent reads `Post_Processed`; answer basic queries with citations.
+
+````markdown
+## 15) Color Scheme (Concrete Tokens for shadcn/Tailwind)
+
+Use the existing landing-page palette as the single source of truth. The dashboard’s Tailwind/shadcn theme MUST map its colors to the following CSS custom properties.
+
+### 15.1 Base (light theme)
+
+Global base colors:
+
+- `--background-color`: `#F9FAFB`  _(page background)_
+- `--text-color`: `#111827`        _(body text)_
+- `--primary-accent`: `#DC2626`    _(brand red; use for key CTAs, destructive/“hot” states where appropriate)_
+- `--secondary-accent`: `#3B82F6` _(blue accent; links, secondary CTAs)_
+
+Core shadcn/Tailwind tokens (light):
+
+```css
+:root {
+  --radius: 0.625rem;
+
+  /* shadcn core */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+
+  /* charts + sidebar */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.208 0.042 265.755);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+}
+````
+
+**Tailwind/shadcn mapping (light theme):**
+
+In `@theme` / Tailwind config:
+
+* `background` → `var(--background)`
+* `foreground` → `var(--foreground)`
+* `card` → `var(--card)`
+* `popover` → `var(--popover)`
+* `primary` → `var(--primary)`
+* `primary-foreground` → `var(--primary-foreground)`
+* `secondary` → `var(--secondary)`
+* `secondary-foreground` → `var(--secondary-foreground)`
+* `muted` → `var(--muted)`
+* `muted-foreground` → `var(--muted-foreground)`
+* `accent` → `var(--accent)`
+* `accent-foreground` → `var(--accent-foreground)`
+* `destructive` → `var(--destructive)`
+* `border` → `var(--border)`
+* `input` → `var(--input)`
+* `ring` → `var(--ring)`
+* `chart-1..5` → `var(--chart-1..5)`
+* `sidebar*` → corresponding `--sidebar*` vars.
+
+shadcn components should use the standard Tailwind color names above; no custom per-component palette.
+
+### 15.2 Dark theme overrides
+
+Dark mode uses the same tokens, overridden under `.dark`:
+
+```css
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+```
+
+**Usage:**
+
+* shadcn components use Tailwind’s `bg-background`, `text-foreground`, `border-border`, `bg-card`, `bg-sidebar`, etc., which resolve to these vars.
+* Global base styles should include:
+
+```css
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+```
+
+This ensures the dashboard and agent UIs inherit the exact same palette as the existing Loadguard landing page in both light and dark modes.
