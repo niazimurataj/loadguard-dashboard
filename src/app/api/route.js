@@ -1,32 +1,34 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
-// 1) Create a DynamoDB client once (re-used across calls)
+// Create DynamoDB client (reused across requests)
 const client = new DynamoDBClient({
-  region: process.env.AWS_REGION,          // e.g. "us-east-1"
+  region: process.env.AWS_REGION,              // e.g. "us-east-1"
 });
 const ddb = DynamoDBDocumentClient.from(client);
 
-// 2) Handle POST /api
 export async function POST(request) {
-  // read JSON from the request body
-  const body = await request.json();       // e.g. { id: "123", value: "foo" }
+  const body = await request.json();           // expect JSON body
 
-  const { id, value } = body;              // adjust these to your real fields
+  const { device_id, value } = body;          // adjust 'value' to whatever payload you want
 
-  if (!id || !value) {
+  // Both keys are required: device_id (string), timestamp (number)
+  if (!device_id || value === undefined) {
     return new Response(
-      JSON.stringify({ error: "id and value are required" }),
+      JSON.stringify({ error: "device_id and value are required" }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
+
+  const timestamp = Date.now();               // Number, matches sort key type
 
   try {
     await ddb.send(
       new PutCommand({
         TableName: process.env.DDB_TABLE_NAME || "MonarchData",
         Item: {
-          id,                               // partition key
+          device_id,                           // partition key
+          timestamp,                           // sort key
           value,
           createdAt: new Date().toISOString(),
         },
