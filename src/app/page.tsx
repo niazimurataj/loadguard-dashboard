@@ -1,89 +1,33 @@
-"use client"
+import { AppSidebar } from "@/components/app-sidebar"
+import { SiteHeader } from "@/components/site-header"
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
 
-import { useState } from 'react';
-import Link from 'next/link';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import { Button, buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  Menu,
-  Search,
-  Settings,
-  Users,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+export const iframeHeight = "800px"
 
-// Data for the table
-const devices = [
-  // TODO 
-  // fetch from API later
-];
+export const description = "A sidebar with a header and a search form."
 
-export default function Home() {
-  
-  const navLinks = [
-    { title: 'Dashboard', href: '/', variant: 'default' },
-    { title: 'Devices', href: '/devices', variant: 'ghost' },
-    { title: 'Agent', href: '/agent', variant: 'ghost' },
-    { title: 'Settings', href: '/settings', variant: 'ghost' },
-    { title: 'Alerts', href: '/alerts', variant: 'ghost' },
-  ] as const;
-
-  //stop wasting time with vibe coding
-  // just use libraries and components
-  return (<>
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 border-r flex flex-col">
-        {/* nav */}
-      </aside>
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-16">  </header>
-        <main className="flex-1 overflow-auto">  </main>
-      </div>
+export default function Page() {
+  return (
+    <div className="[--header-height:calc(--spacing(14))]">
+      <SidebarProvider className="flex flex-col">
+        <SiteHeader />
+        <div className="flex flex-1">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+                <div className="bg-muted/50 aspect-video rounded-xl" />
+              </div>
+              <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     </div>
-
-  </>);
+  )
 }
