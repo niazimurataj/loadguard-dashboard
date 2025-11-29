@@ -28,7 +28,7 @@ export function SiteHeader() {
           <img
             src="/lg-logo.png"
             alt="Logo"
-            className="h-6 w-auto"
+            className="h-6 w-auto rounded-sm"
           />
         </a>
         <Button

@@ -45,7 +45,7 @@ export default async function Dashboard() {
                             {/* This assumes Dashboard is declared as: `export default async function Dashboard()` */}
 
                             {(
-                                await fetch("http://localhost:3000/api", {
+                                await fetch("https://loadguard-dashboard.vercel.app/api", {
                                 method: "GET",
                                 // prevent caching in dev so you always see fresh data
                                 cache: "no-store",
