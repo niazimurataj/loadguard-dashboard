@@ -1,0 +1,171 @@
+name: Daily Consistency Pressure (LoadGuard)
+
+on:
+  schedule:
+    # Runs nightly ~11:15pm New York (Standard Time)
+    - cron: "15 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  pressure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute status + open next issue
+        id: compute
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            function ymdInNY(offsetDays = 0) {
+              const now = new Date();
+              const shifted = new Date(now.getTime() + offsetDays * 86400000);
+              const parts = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "America/New_York",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }).formatToParts(shifted);
+              const y = parts.find(p => p.type === "year").value;
+              const m = parts.find(p => p.type === "month").value;
+              const d = parts.find(p => p.type === "day").value;
+              return `${y}-${m}-${d}`;
+            }
+
+            const today = ymdInNY(0);
+            const tomorrow = ymdInNY(1);
+            const labelName = "daily-shippable";
+
+            async function ensureLabel() {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: labelName });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner, repo,
+                    name: labelName,
+                    color: "0e8a16",
+                    description: "Daily shippable accountability issues"
+                  });
+                } else throw e;
+              }
+            }
+
+            function missLine() {
+              const lines = [
+                "Oh — I suppose he was too busy changing his pants to take another step toward meaning today. Noted.",
+                "A masterclass in inactivity. One assumes greatness will simply arrive by courier.",
+                "Bold plan: do nothing and hope discipline catches feelings.",
+                "Tragic. The day escaped unshipped, like a cowardly parcel."
+              ];
+              return lines[Math.floor(Math.random() * lines.length)];
+            }
+
+            await ensureLabel();
+
+            const todayTitle = `Daily Shippable — ${today}`;
+            const tomorrowTitle = `Daily Shippable — ${tomorrow}`;
+
+            async function findIssue(title) {
+              const q = `repo:${owner}/${repo} is:issue "${title}"`;
+              const res = await github.rest.search.issuesAndPullRequests({ q, per_page: 5 });
+              return res.data.items.find(i => i.title === title) || null;
+            }
+
+            const todayIssue = await findIssue(todayTitle);
+
+            let engaged = false;
+            let evidence = "";
+            let thought = "";
+
+            if (todayIssue) {
+              if (todayIssue.state === "closed") {
+                engaged = true;
+              } else {
+                const comments = await github.rest.issues.listComments({
+                  owner, repo, issue_number: todayIssue.number, per_page: 100
+                });
+
+                for (const c of comments.data) {
+                  if (c.user?.login !== owner) continue;
+                  const body = (c.body || "").trim();
+                  if (body.toLowerCase().startsWith("/done")) {
+                    engaged = true;
+                    evidence = body.slice(5).trim();
+                  }
+                  if (body.toLowerCase().startsWith("/thought")) {
+                    engaged = true;
+                    thought = body.slice(8).trim();
+                  }
+                }
+              }
+            }
+
+            const status = engaged ? "DONE" : "MISSED";
+            const message = engaged
+              ? "Accounted for. Tomorrow awaits."
+              : missLine();
+
+            const existingTomorrow = await findIssue(tomorrowTitle);
+            if (!existingTomorrow) {
+              await github.rest.issues.create({
+                owner, repo,
+                title: tomorrowTitle,
+                labels: [labelName],
+                body: [
+                  "## Today’s Shippable",
+                  "One concrete thing. ≤ 90 minutes.",
+                  "",
+                  "## Definition of Done",
+                  "- Observable outcome",
+                  "- Evidence link",
+                  "",
+                  "## How to close",
+                  "`/done <evidence link>`",
+                  "or",
+                  "`/thought <1 sentence>`"
+                ].join("\n")
+              });
+            }
+
+            core.setOutput("today", today);
+            core.setOutput("status", status);
+            core.setOutput("message", message);
+            core.setOutput("issueUrl", todayIssue?.html_url || "");
+            core.setOutput("evidence", evidence);
+            core.setOutput("thought", thought);
+
+      - name: Write ledger file
+        run: |
+          mkdir -p consistency
+          FILE="consistency/${{ steps.compute.outputs.today }}.md"
+
+          {
+            echo "# Consistency Ledger — ${{ steps.compute.outputs.today }}"
+            echo ""
+            echo "- Status: **${{ steps.compute.outputs.status }}**"
+            echo "- Issue: ${{ steps.compute.outputs.issueUrl }}"
+            [ -n "${{ steps.compute.outputs.evidence }}" ] && echo "- Evidence: ${{ steps.compute.outputs.evidence }}"
+            [ -n "${{ steps.compute.outputs.thought }}" ] && echo "- Thought: ${{ steps.compute.outputs.thought }}"
+            echo ""
+            echo "## Message"
+            echo "${{ steps.compute.outputs.message }}"
+          } > "$FILE"
+
+      - name: Commit ledger (authored as you)
+        run: |
+          git config user.name "niazimurataj"
+          git config user.email "169002081+niazimurataj@users.noreply.github.com"
+          git add consistency
+          git commit -m "chore: daily consistency ledger (${{ steps.compute.outputs.today }})" || true
+          git push
