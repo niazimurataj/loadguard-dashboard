@@ -10,10 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import MembersMap from "@/components/members-map"
+import { SiteHeader } from "@/components/site-header"
 
 
 export default async function Dashboard() {
     return (
+        <>
+        <h1 className="p-2"><b>Observability Command</b></h1>
         <div className="flex flex-1 flex-row gap-4 p-4 col-2">
               <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
                             {/* TODO:
@@ -28,6 +31,7 @@ export default async function Dashboard() {
                     />
               </div>
               <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" > 
+                    
                     <Table>
                         <TableCaption>This is the end of your devices.</TableCaption>
                         <TableHeader>
@@ -69,6 +73,6 @@ export default async function Dashboard() {
                     </Table>
               </div>
         </div> 
+        </>
     );
 }
-
