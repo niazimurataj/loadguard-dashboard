@@ -1,0 +1,12 @@
+// .cursorrules
+
+# Output Requirements
+## Code Style 
+  - Use TypeScript with strict mode, explicit return types on exports
+  - Prefer named exports, PascalCase for components, camelCase for utils
+  - Use async/await, never .then() chains
+  - Destructure props in function signature
+  - No comments unless logic is non-obvious
+  - Single quotes, no semicolons, trailing commas
+  - Early returns over nested conditionals
+  - Keep files under 150 lines, extract when larger
