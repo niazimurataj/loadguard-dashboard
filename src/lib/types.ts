@@ -1,18 +1,7 @@
 import type { DecodedSensorData } from "./decode-sensor-data";
 
-/**
- * Raw item shape returned from DynamoDB MonarchData table.
- * The `raw_message` field contains Base64URL-encoded, zlib-compressed binary sensor data.
- */
-export interface DynamoDBDeviceItem {
-  device_id: string;
-  timestamp: number;
-  raw_message?: string; // Base64URL-encoded compressed binary from ESP32
-  // Legacy fields (may exist in older records before binary encoding)
-  status?: string;
-  humidity?: number;
-  temperature?: number;
-}
+// Re-export RawDeviceItem from db for backwards compatibility
+export type { RawDeviceItem as DynamoDBDeviceItem } from "./db";
 
 /**
  * Processed device data ready for display.

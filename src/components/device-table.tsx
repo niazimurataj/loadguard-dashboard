@@ -8,38 +8,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { decodeSensorData } from "@/lib/decode-sensor-data";
-import type { DynamoDBDeviceItem, DeviceData } from "@/lib/types";
+import { getDeviceItems } from "@/lib/db";
+import type { DeviceData } from "@/lib/types";
 
 interface DeviceTableProps {
   className?: string;
 }
 
 /**
- * Fetches device data from the API and decodes raw sensor payloads.
- * This is a Server Component — data fetching happens at request time.
+ * Transforms raw DynamoDB items into display-ready DeviceData.
+ * Called directly in Server Component - no HTTP overhead.
  */
 async function fetchDeviceData(): Promise<DeviceData[]> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-  const res = await fetch(`${baseUrl}/api`, {
-    method: "GET",
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error(`API request failed: ${res.status} ${res.statusText}`);
-  }
-
-  const data = await res.json();
-  const items: DynamoDBDeviceItem[] = data.items ?? [];
+  // Direct DynamoDB call - no self-referential HTTP request
+  const items = await getDeviceItems(50);
 
   return items.map((item) => {
     const sensors = item.raw_message
       ? decodeSensorData(item.raw_message)
       : null;
 
+    // Simple online/offline heuristic based on timestamp recency
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     const isRecent = item.timestamp > fiveMinutesAgo;
     const status: DeviceData["status"] = sensors
