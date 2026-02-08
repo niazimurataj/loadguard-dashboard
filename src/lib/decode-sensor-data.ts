@@ -8,7 +8,7 @@
  *
  * Binary format (little-endian, 99 bytes uncompressed):
  *   - uint32: logIndex
- *   - uint32: timestamp (ms since epoch)
+ *   - uint32: timestamp (seconds since UNIX epoch)
  *   - int16 × 3: yaw, roll, pitch (÷100 for degrees)
  *   - int16 × 3: ax, ay, az (÷1000 for m/s²)
  *   - int16 × 3: gx, gy, gz (÷1000 for rad/s)
@@ -186,7 +186,9 @@ export function decodeSensorData(
 
     // Unpack in exact order from packCombinedDataBinary() in int_transmission.c
     const logIndex = readUint32();
-    const timestamp = readUint32();
+    // Device stores seconds since UNIX epoch in a uint32 (max ~2106).
+    // Convert to milliseconds so it's consistent with JS Date / DynamoDB timestamps.
+    const timestamp = readUint32() * 1000;
 
     // IMU data - stored as scaled int16, convert back to float
     const yaw = readInt16() / 100; // degrees
