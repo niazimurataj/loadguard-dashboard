@@ -15,7 +15,11 @@ export const iframeHeight = "800px"
 
 export const description = "A sidebar with a header and a search form."
 
-export default function Page() {
+type PageProps = {
+  searchParams?: Promise<{ device?: string }>
+}
+
+export default async function Page({ searchParams }: PageProps) {
   return (
     <div className="[--header-height:calc(--spacing(14))]">
       <SidebarProvider className="flex flex-col">
@@ -23,7 +27,7 @@ export default function Page() {
         <div className="flex flex-1">
           <AppSidebar />
           <SidebarInset>
-            <Dashboard />
+            <Dashboard searchParams={searchParams} />
           </SidebarInset>
         </div>
       </SidebarProvider>

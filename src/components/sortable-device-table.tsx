@@ -28,6 +28,7 @@ function formatTimestamp(ts: number): string {
   if (!ts) return "—";
   const date = new Date(ts);
   return date.toLocaleString("en-US", {
+    year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -102,18 +103,19 @@ export function SortableDeviceTable({ devices }: SortableDeviceTableProps) {
     children: React.ReactNode;
     className?: string;
   }) => (
-    <TableHead
-      className={`cursor-pointer select-none hover:bg-muted/50 ${className ?? ""}`}
-      onClick={() => handleSort(colKey)}
-    >
-      <span className="inline-flex items-center gap-1">
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => handleSort(colKey)}
+        className="w-full text-left inline-flex items-center gap-1 cursor-pointer select-none hover:bg-muted/50 rounded px-1 -mx-1 py-1.5 font-medium"
+      >
         {children}
         {sortKey === colKey && (
           <span className="text-muted-foreground" aria-hidden>
-            {sortDir === "asc" ? "↑" : "↓"}
+            {sortDir === "asc" ? " ↑" : " ↓"}
           </span>
         )}
-      </span>
+      </button>
     </TableHead>
   );
 
