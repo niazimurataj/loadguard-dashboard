@@ -15,6 +15,8 @@ export const iframeHeight = "800px"
 
 export const description = "A sidebar with a header and a search form."
 
+export const dynamic = "force-dynamic"
+
 type PageProps = {
   searchParams?: Promise<{ device?: string }>
 }

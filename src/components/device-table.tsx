@@ -37,8 +37,14 @@ async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> 
 
     // Prefer decoded column for timestamp; fallback to item.timestamp (DynamoDB stores seconds, e.g. 1772404093)
     const tsFromDecoded = d?.json ? num((d.json as Record<string, unknown>).ts) : null;
-    const rawTs = tsFromDecoded ?? item.timestamp;
-    const timestampMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+    let rawTs = tsFromDecoded ?? item.timestamp;
+    let timestampMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+    // If device sent a bogus future date (e.g. 2069 from ts=3155760013), use DynamoDB item timestamp instead
+    const now = Date.now();
+    if (timestampMs > now + 86400000) {
+      const fallback = item.timestamp < 1e12 ? item.timestamp * 1000 : item.timestamp;
+      timestampMs = fallback;
+    }
     const humidity =
       (d?.env ? num((d.env as Record<string, unknown>).hum) : null) ??
       sensors?.shtHum ??

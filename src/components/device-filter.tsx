@@ -25,7 +25,9 @@ export function DeviceFilter({
       params.set("device", value);
     }
     const q = params.toString();
-    router.push(q ? `${pathname}?${q}` : pathname);
+    const url = q ? `${pathname}?${q}` : pathname;
+    router.push(url);
+    router.refresh();
   }
 
   const sortedIds = [...deviceIds].filter(Boolean).sort();
