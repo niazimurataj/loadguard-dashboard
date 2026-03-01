@@ -24,13 +24,23 @@ export interface DecodedColumnPayload {
   location?: { lat?: number; lng?: number; [key: string]: unknown };
 }
 
+/** Ingest metadata stored by ingest Lambda. */
+export interface IngestMeta {
+  received_at?: number;
+  source?: string;
+}
+
 export interface RawDeviceItem {
   device_id: string;
   timestamp: number;
-  raw_message?: string;
-  /** Decoded payload (imu, json, env, lte) when stored as a column */
+  /** Decoded payload (env, imu, json, lte, location) when stored as a column */
   decoded?: DecodedColumnPayload;
-  // Legacy fields
+  device_local_ip?: string;
+  ingest_meta?: IngestMeta;
+  log_index?: number;
+  raw_message?: string;
+  raw_payload?: string;
+  // Legacy
   status?: string;
   humidity?: number;
   temperature?: number;

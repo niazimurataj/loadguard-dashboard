@@ -1,14 +1,6 @@
 import { Suspense } from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { DeviceFilter } from "@/components/device-filter";
+import { SortableDeviceTable } from "@/components/sortable-device-table";
 import { decodeSensorData } from "@/lib/decode-sensor-data";
 import { getDeviceItems, type DecodedColumnPayload } from "@/lib/db";
 import type { DeviceData } from "@/lib/types";
@@ -43,12 +35,10 @@ async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> 
       : null;
     const d = item.decoded as DecodedColumnPayload | undefined;
 
-    // Prefer decoded column for timestamp, humidity, temperature, lat/long when present
+    // Prefer decoded column for timestamp; fallback to item.timestamp (DynamoDB stores seconds, e.g. 1772404093)
     const tsFromDecoded = d?.json ? num((d.json as Record<string, unknown>).ts) : null;
-    const timestampMs =
-      tsFromDecoded != null
-        ? (tsFromDecoded < 1e12 ? tsFromDecoded * 1000 : tsFromDecoded)
-        : item.timestamp;
+    const rawTs = tsFromDecoded ?? item.timestamp;
+    const timestampMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
     const humidity =
       (d?.env ? num((d.env as Record<string, unknown>).hum) : null) ??
       sensors?.shtHum ??
@@ -74,57 +64,16 @@ async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> 
     return {
       deviceId: item.device_id ?? "unknown",
       timestamp: timestampMs,
-      logIndex: sensors?.logIndex ?? null,
+      logIndex: item.log_index ?? sensors?.logIndex ?? null,
       status,
       humidity,
       temperature,
       latitude,
       longitude,
+      deviceLocalIp: item.device_local_ip ?? null,
       sensors,
     };
   }).sort((a, b) => b.timestamp - a.timestamp);
-}
-
-/** Formats a number for display, returning "—" if null/undefined/NaN. */
-function formatValue(
-  value: number | null | undefined,
-  unit: string,
-  decimals = 1
-): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return `${value.toFixed(decimals)}${unit}`;
-}
-
-/** Formats a timestamp as a readable date string. */
-function formatTimestamp(ts: number): string {
-  if (!ts) return "—";
-  const date = new Date(ts);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-/** Formats lat/long for display. */
-function formatLatLong(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) return "—";
-  return value.toFixed(4);
-}
-
-/** Returns a status badge color based on device status. */
-function getStatusColor(status: DeviceData["status"]): string {
-  switch (status) {
-    case "online":
-      return "text-green-600";
-    case "offline":
-      return "text-red-500";
-    default:
-      return "text-muted-foreground";
-  }
 }
 
 export default async function DeviceTable({
@@ -162,64 +111,16 @@ export default async function DeviceTable({
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`}>
       <Suspense fallback={<div className="h-9 shrink-0" />}>
-        <DeviceFilter
-          deviceIds={uniqueDeviceIds}
-          currentDeviceId={deviceId}
-          className="shrink-0"
-        />
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-sm font-medium text-muted-foreground">Device</span>
+          <DeviceFilter
+            deviceIds={uniqueDeviceIds}
+            currentDeviceId={deviceId}
+          />
+        </div>
       </Suspense>
       <div className="min-h-0 flex-1 overflow-auto">
-      <Table>
-        <TableCaption>End of device list.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Device ID</TableHead>
-            <TableHead>Timestamp</TableHead>
-            <TableHead>Temp</TableHead>
-            <TableHead>Humidity</TableHead>
-            <TableHead>Lat</TableHead>
-            <TableHead>Long</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {devices.map((device) => (
-            <TableRow key={`${device.deviceId}#${device.timestamp}`}>
-              {/* Device ID - truncated for space */}
-              <TableCell
-                className="font-mono text-xs max-w-[100px] truncate"
-                title={device.deviceId}
-              >
-                {device.deviceId.replace("monarch_", "").slice(-6)}
-              </TableCell>
-
-              {/* Timestamp */}
-              <TableCell className="text-xs text-muted-foreground">
-                {formatTimestamp(device.sensors?.timestamp ?? device.timestamp)}
-              </TableCell>
-
-              {/* Temperature */}
-              <TableCell>{formatValue(device.temperature, "°C")}</TableCell>
-
-              {/* Humidity */}
-              <TableCell>{formatValue(device.humidity, "%")}</TableCell>
-
-              {/* Latitude / Longitude from decoded */}
-              <TableCell className="text-xs font-mono">
-                {formatLatLong(device.latitude)}
-              </TableCell>
-              <TableCell className="text-xs font-mono">
-                {formatLatLong(device.longitude)}
-              </TableCell>
-
-              {/* Status */}
-              <TableCell className={getStatusColor(device.status)}>
-                {device.status}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        <SortableDeviceTable devices={devices} />
       </div>
     </div>
   );

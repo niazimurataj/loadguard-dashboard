@@ -16,6 +16,7 @@ export interface DeviceData {
   temperature: number | null;
   latitude: number | null;
   longitude: number | null;
+  deviceLocalIp: string | null;
   // Full decoded sensor data if raw_message was present and valid
   sensors: DecodedSensorData | null;
 }
