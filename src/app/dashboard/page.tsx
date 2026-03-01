@@ -24,6 +24,8 @@ export default async function Dashboard({ searchParams }: PageProps = {}) {
       .map((d, i) => ({
         name: `${d.deviceId}-${d.timestamp}-${i}`,
         position: { lat: d.latitude as number, lng: d.longitude as number },
+        rangeM: d.locationRangeM ?? undefined,
+        source: d.locationSource ?? undefined,
       })) ?? [];
 
   return (

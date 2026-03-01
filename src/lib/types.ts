@@ -16,6 +16,10 @@ export interface DeviceData {
   temperature: number | null;
   latitude: number | null;
   longitude: number | null;
+  /** Location accuracy radius in meters (e.g. from decoded.location.range_m). */
+  locationRangeM: number | null;
+  /** Location source (e.g. "opencellid"). */
+  locationSource: string | null;
   deviceLocalIp: string | null;
   // Full decoded sensor data if raw_message was present and valid
   sensors: DecodedSensorData | null;

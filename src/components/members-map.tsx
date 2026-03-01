@@ -15,6 +15,10 @@ type Marker = {
     lat: number;
     lng: number;
   };
+  /** Location accuracy radius in meters (e.g. from OpenCellID range_m). */
+  rangeM?: number;
+  /** Location source (e.g. "opencellid"). */
+  source?: string;
 };
 
 type Route = {
@@ -154,20 +158,27 @@ export default function MembersMap({ markers, routes }: MembersMapProps) {
         zoom={zoom}
         options={mapOptions}
       >
-        {markers.map((marker) => (
-          <MarkerF
-            key={marker.name}
-            position={marker.position}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#B91C1C",
-              fillOpacity: 1,
-              strokeWeight: 2,
-              strokeColor: "#ffffff",
-            }}
-          />
-        ))}
+        {markers.map((marker) => {
+          const resolutionLabel =
+            marker.rangeM != null || marker.source
+              ? [marker.rangeM != null ? `±${marker.rangeM} m` : "", marker.source].filter(Boolean).join(" · ")
+              : undefined;
+          return (
+            <MarkerF
+              key={marker.name}
+              position={marker.position}
+              title={resolutionLabel ?? undefined}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#B91C1C",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#ffffff",
+              }}
+            />
+          );
+        })}
         {routes.map((route, i) => {
           const fromMarker = markers.find((m) => m.name === route.from);
           const toMarker = markers.find((m) => m.name === route.to);

@@ -41,6 +41,16 @@ function formatLatLong(value: number | null | undefined): string {
   return value.toFixed(4);
 }
 
+function formatResolution(
+  rangeM: number | null | undefined,
+  source: string | null | undefined
+): string {
+  const parts: string[] = [];
+  if (rangeM != null && !isNaN(rangeM)) parts.push(`±${rangeM} m`);
+  if (source) parts.push(source);
+  return parts.length ? parts.join(" · ") : "—";
+}
+
 function sortNumeric(
   a: number | null | undefined,
   b: number | null | undefined,
@@ -130,6 +140,7 @@ export function SortableDeviceTable({ devices }: SortableDeviceTableProps) {
           <SortHeader colKey="timestamp">Timestamp</SortHeader>
           <SortHeader colKey="latitude">Lat</SortHeader>
           <SortHeader colKey="longitude">Long</SortHeader>
+          <TableHead className="w-[120px]">Resolution</TableHead>
           <SortHeader colKey="humidity">Hum</SortHeader>
           <SortHeader colKey="temperature">Temp</SortHeader>
         </TableRow>
@@ -151,6 +162,9 @@ export function SortableDeviceTable({ devices }: SortableDeviceTableProps) {
             </TableCell>
             <TableCell className="text-xs font-mono">
               {formatLatLong(device.longitude)}
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {formatResolution(device.locationRangeM, device.locationSource)}
             </TableCell>
             <TableCell>{formatValue(device.humidity, "%")}</TableCell>
             <TableCell>{formatValue(device.temperature, "°C")}</TableCell>

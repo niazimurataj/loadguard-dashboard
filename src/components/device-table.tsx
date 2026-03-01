@@ -15,6 +15,15 @@ function num(value: unknown): number | null {
   return null;
 }
 
+/** Read string from decoded payload (handles DynamoDB { S: string } or plain string). */
+function str(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value != null && typeof value === "object" && "S" in value && typeof (value as { S: string }).S === "string") {
+    return (value as { S: string }).S;
+  }
+  return null;
+}
+
 interface DeviceTableProps {
   className?: string;
   /** When set, only this device's data is shown. When null, user must select a device. */
@@ -60,8 +69,11 @@ export async function fetchDeviceData(deviceId?: string | null): Promise<DeviceD
       sensors?.shtTemp ??
       item.temperature ??
       null;
-    const latitude = d?.location ? num((d.location as Record<string, unknown>).lat) ?? null : null;
-    const longitude = d?.location ? num((d.location as Record<string, unknown>).lng) ?? null : null;
+    const loc = d?.location as Record<string, unknown> | undefined;
+    const latitude = loc ? num(loc.lat) ?? null : null;
+    const longitude = loc ? num(loc.lng) ?? null : null;
+    const locationRangeM = loc ? num(loc.range_m) ?? null : null;
+    const locationSource = loc ? str(loc.source) ?? null : null;
 
     // Simple online/offline heuristic based on timestamp recency
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
@@ -81,6 +93,8 @@ export async function fetchDeviceData(deviceId?: string | null): Promise<DeviceD
       temperature,
       latitude,
       longitude,
+      locationRangeM,
+      locationSource,
       deviceLocalIp: item.device_local_ip ?? null,
       sensors,
     };
