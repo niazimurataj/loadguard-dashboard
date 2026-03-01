@@ -78,7 +78,7 @@ async function fetchDeviceData(): Promise<DeviceData[]> {
       longitude,
       sensors,
     };
-  });
+  }).sort((a, b) => b.timestamp - a.timestamp);
 }
 
 /** Formats a number for display, returning "—" if null/undefined/NaN. */
@@ -163,9 +163,6 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
             <TableHead>Lat</TableHead>
             <TableHead>Long</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Operator</TableHead>
-            <TableHead>RSRP</TableHead>
-            <TableHead>Band</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -201,21 +198,6 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
               {/* Status */}
               <TableCell className={getStatusColor(device.status)}>
                 {device.status}
-              </TableCell>
-
-              {/* LTE Operator */}
-              <TableCell className="text-xs">
-                {device.sensors?.operatorName || "—"}
-              </TableCell>
-
-              {/* LTE Signal Strength (RSRP) */}
-              <TableCell className="text-xs">
-                {formatValue(device.sensors?.rsrp, " dBm", 0)}
-              </TableCell>
-
-              {/* LTE Band */}
-              <TableCell className="text-xs">
-                {device.sensors?.band ?? "—"}
               </TableCell>
             </TableRow>
           ))}
