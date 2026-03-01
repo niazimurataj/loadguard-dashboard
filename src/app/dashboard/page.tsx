@@ -2,11 +2,11 @@ import MembersMap from "@/components/members-map";
 import DeviceTable from "@/components/device-table";
 
 type PageProps = {
-  searchParams: Promise<{ device?: string }>;
+  searchParams?: Promise<{ device?: string }>;
 };
 
-export default async function Dashboard({ searchParams }: PageProps) {
-  const params = await searchParams;
+export default async function Dashboard({ searchParams }: PageProps = {}) {
+  const params = searchParams ? await searchParams : {};
   const deviceId = params?.device ?? null;
 
   return (
