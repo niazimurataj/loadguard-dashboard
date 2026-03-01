@@ -15,12 +15,13 @@ const ddb = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = process.env.DDB_TABLE_NAME || "MonarchData";
 
-/** Decoded column payload (DynamoDB unmarshalled: imu, json, env, lte). */
+/** Decoded column payload (DynamoDB unmarshalled: imu, json, env, lte, location). */
 export interface DecodedColumnPayload {
   imu?: { lx?: number; ly?: number; lz?: number; [key: string]: unknown };
   json?: { ts?: number; [key: string]: unknown };
   env?: { hum?: number; temp_c?: number; [key: string]: unknown };
   lte?: Record<string, unknown>;
+  location?: { lat?: number; lng?: number; [key: string]: unknown };
 }
 
 export interface RawDeviceItem {

@@ -55,8 +55,8 @@ async function fetchDeviceData(): Promise<DeviceData[]> {
       sensors?.shtTemp ??
       item.temperature ??
       null;
-    const latitude = d?.imu ? num((d.imu as Record<string, unknown>).ly) ?? null : null;
-    const longitude = d?.imu ? num((d.imu as Record<string, unknown>).lx) ?? null : null;
+    const latitude = d?.location ? num((d.location as Record<string, unknown>).lat) ?? null : null;
+    const longitude = d?.location ? num((d.location as Record<string, unknown>).lng) ?? null : null;
 
     // Simple online/offline heuristic based on timestamp recency
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
