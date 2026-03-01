@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DeviceFilter } from "@/components/device-filter";
 import { decodeSensorData } from "@/lib/decode-sensor-data";
 import { getDeviceItems, type DecodedColumnPayload } from "@/lib/db";
 import type { DeviceData } from "@/lib/types";
@@ -23,15 +24,17 @@ function num(value: unknown): number | null {
 
 interface DeviceTableProps {
   className?: string;
+  /** When set, only this device's latest entries are fetched (Query). Otherwise scan 300 for latest mix. */
+  deviceId?: string | null;
 }
 
 /**
  * Transforms raw DynamoDB items into display-ready DeviceData.
  * Called directly in Server Component - no HTTP overhead.
  */
-async function fetchDeviceData(): Promise<DeviceData[]> {
-  // Direct DynamoDB call - no self-referential HTTP request
-  const items = await getDeviceItems(50);
+async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> {
+  const limit = deviceId ? 100 : 300;
+  const items = await getDeviceItems(limit, deviceId ?? undefined);
 
   return items.map((item) => {
     const sensors = item.raw_message
@@ -123,12 +126,15 @@ function getStatusColor(status: DeviceData["status"]): string {
   }
 }
 
-export default async function DeviceTable({ className }: DeviceTableProps) {
+export default async function DeviceTable({
+  className,
+  deviceId = null,
+}: DeviceTableProps) {
   let devices: DeviceData[] = [];
   let error: string | null = null;
 
   try {
-    devices = await fetchDeviceData();
+    devices = await fetchDeviceData(deviceId);
   } catch (e) {
     console.error("Failed to fetch device data:", e);
     error = "Unable to load device data. Please try again later.";
@@ -150,8 +156,16 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
     );
   }
 
+  const uniqueDeviceIds = [...new Set(devices.map((d) => d.deviceId))];
+
   return (
-    <div className={`overflow-auto ${className ?? ""}`}>
+    <div className={`flex flex-col gap-2 ${className ?? ""}`}>
+      <DeviceFilter
+        deviceIds={uniqueDeviceIds}
+        currentDeviceId={deviceId}
+        className="shrink-0"
+      />
+      <div className="min-h-0 flex-1 overflow-auto">
       <Table>
         <TableCaption>End of device list.</TableCaption>
         <TableHeader>
@@ -203,6 +217,7 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

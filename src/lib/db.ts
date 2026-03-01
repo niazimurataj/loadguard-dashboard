@@ -4,7 +4,7 @@
  */
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 // Singleton client - reused across requests
 const client = new DynamoDBClient({
@@ -38,9 +38,26 @@ export interface RawDeviceItem {
 
 /**
  * Fetches device items directly from DynamoDB.
- * For use in Server Components - no HTTP overhead.
+ * When deviceId is provided, uses Query for that partition (latest first).
+ * Otherwise scans with a higher limit so recent items are more likely included.
  */
-export async function getDeviceItems(limit = 50): Promise<RawDeviceItem[]> {
+export async function getDeviceItems(
+  limit = 300,
+  deviceId?: string
+): Promise<RawDeviceItem[]> {
+  if (deviceId) {
+    const result = await ddb.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "device_id = :id",
+        ExpressionAttributeValues: { ":id": deviceId },
+        ScanIndexForward: false,
+        Limit: Math.min(limit, 100),
+      })
+    );
+    return (result.Items as RawDeviceItem[]) ?? [];
+  }
+
   const result = await ddb.send(
     new ScanCommand({
       TableName: TABLE_NAME,
