@@ -17,15 +17,20 @@ function num(value: unknown): number | null {
 
 interface DeviceTableProps {
   className?: string;
-  /** When set, only this device's latest entries are fetched (Query). Otherwise scan 300 for latest mix. */
+  /** When set, only this device's data is shown. When null, user must select a device. */
   deviceId?: string | null;
+  /** Pre-fetched device IDs for the dropdown (so user can select a device). */
+  deviceIds: string[];
+  /** Pre-fetched data when a device is selected (avoids duplicate fetch). When null/undefined, table fetches if deviceId is set. */
+  devices?: DeviceData[] | null;
 }
 
 /**
  * Transforms raw DynamoDB items into display-ready DeviceData.
  * Called directly in Server Component - no HTTP overhead.
+ * Exported so Dashboard can fetch device data for table + map.
  */
-async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> {
+export async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> {
   const limit = deviceId ? 100 : 300;
   const items = await getDeviceItems(limit, deviceId ?? undefined);
 
@@ -85,15 +90,19 @@ async function fetchDeviceData(deviceId?: string | null): Promise<DeviceData[]> 
 export default async function DeviceTable({
   className,
   deviceId = null,
+  deviceIds,
+  devices: devicesProp,
 }: DeviceTableProps) {
-  let devices: DeviceData[] = [];
+  let devices: DeviceData[] = devicesProp ?? [];
   let error: string | null = null;
 
-  try {
-    devices = await fetchDeviceData(deviceId);
-  } catch (e) {
-    console.error("Failed to fetch device data:", e);
-    error = "Unable to load device data. Please try again later.";
+  if (devices.length === 0 && deviceId) {
+    try {
+      devices = await fetchDeviceData(deviceId);
+    } catch (e) {
+      console.error("Failed to fetch device data:", e);
+      error = "Unable to load device data. Please try again later.";
+    }
   }
 
   if (error) {
@@ -104,30 +113,30 @@ export default async function DeviceTable({
     );
   }
 
-  if (devices.length === 0) {
-    return (
-      <div className={`p-4 text-center ${className ?? ""}`}>
-        <p className="text-muted-foreground">No devices found.</p>
-      </div>
-    );
-  }
-
-  const uniqueDeviceIds = [...new Set(devices.map((d) => d.deviceId))];
-
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`}>
       <Suspense fallback={<div className="h-9 shrink-0" />}>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm font-medium text-muted-foreground">Device</span>
           <DeviceFilter
-            deviceIds={uniqueDeviceIds}
+            deviceIds={deviceIds}
             currentDeviceId={deviceId}
           />
         </div>
       </Suspense>
-      <div className="min-h-0 flex-1 overflow-auto">
-        <SortableDeviceTable devices={devices} />
-      </div>
+      {!deviceId ? (
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+          Select a device to view data and location on the map.
+        </div>
+      ) : devices.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+          No data for this device.
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-auto">
+          <SortableDeviceTable devices={devices} />
+        </div>
+      )}
     </div>
   );
 }

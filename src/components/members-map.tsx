@@ -32,7 +32,7 @@ const containerStyle = {
   height: "100%",
 };
 
-const center = {
+const defaultCenter = {
   lat: 20.0,
   lng: -40.0,
 };
@@ -110,11 +110,20 @@ const mapOptions: google.maps.MapOptions = {
   zoomControl: true,
 };
 
-export default  function MembersMap({ markers, routes }: MembersMapProps) {
+export default function MembersMap({ markers, routes }: MembersMapProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
   });
+
+  const center =
+    markers.length > 0
+      ? {
+          lat: markers.reduce((s, m) => s + m.position.lat, 0) / markers.length,
+          lng: markers.reduce((s, m) => s + m.position.lng, 0) / markers.length,
+        }
+      : defaultCenter;
+  const zoom = markers.length > 0 ? 10 : 2;
 
   if (loadError) {
     return (
@@ -133,11 +142,16 @@ export default  function MembersMap({ markers, routes }: MembersMapProps) {
   }
 
   return (
-    <div className="h-full w-full rounded-xl border bg-muted">
+    <div className="relative h-full w-full rounded-xl border bg-muted">
+      {markers.length === 0 && (
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded bg-muted/90 px-3 py-1.5 text-xs text-muted-foreground">
+          Select a device with location to see it on the map
+        </div>
+      )}
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
-        zoom={2}
+        zoom={zoom}
         options={mapOptions}
       >
         {markers.map((marker) => (
