@@ -14,6 +14,8 @@ export interface DeviceData {
   status: "online" | "offline" | "unknown";
   humidity: number | null;
   temperature: number | null;
+  latitude: number | null;
+  longitude: number | null;
   // Full decoded sensor data if raw_message was present and valid
   sensors: DecodedSensorData | null;
 }

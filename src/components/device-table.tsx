@@ -8,8 +8,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { decodeSensorData } from "@/lib/decode-sensor-data";
-import { getDeviceItems } from "@/lib/db";
+import { getDeviceItems, type DecodedColumnPayload } from "@/lib/db";
 import type { DeviceData } from "@/lib/types";
+
+/** Read number from decoded payload (handles DynamoDB unmarshalled number or raw { N: string }). */
+function num(value: unknown): number | null {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (value != null && typeof value === "object" && "N" in value && typeof (value as { N: string }).N === "string") {
+    const n = parseFloat((value as { N: string }).N);
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
 
 interface DeviceTableProps {
   className?: string;
@@ -27,11 +37,31 @@ async function fetchDeviceData(): Promise<DeviceData[]> {
     const sensors = item.raw_message
       ? decodeSensorData(item.raw_message)
       : null;
+    const d = item.decoded as DecodedColumnPayload | undefined;
+
+    // Prefer decoded column for timestamp, humidity, temperature, lat/long when present
+    const tsFromDecoded = d?.json ? num((d.json as Record<string, unknown>).ts) : null;
+    const timestampMs =
+      tsFromDecoded != null
+        ? (tsFromDecoded < 1e12 ? tsFromDecoded * 1000 : tsFromDecoded)
+        : item.timestamp;
+    const humidity =
+      (d?.env ? num((d.env as Record<string, unknown>).hum) : null) ??
+      sensors?.shtHum ??
+      item.humidity ??
+      null;
+    const temperature =
+      (d?.env ? num((d.env as Record<string, unknown>).temp_c) : null) ??
+      sensors?.shtTemp ??
+      item.temperature ??
+      null;
+    const latitude = d?.imu ? num((d.imu as Record<string, unknown>).ly) ?? null : null;
+    const longitude = d?.imu ? num((d.imu as Record<string, unknown>).lx) ?? null : null;
 
     // Simple online/offline heuristic based on timestamp recency
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    const isRecent = item.timestamp > fiveMinutesAgo;
-    const status: DeviceData["status"] = sensors
+    const isRecent = timestampMs > fiveMinutesAgo;
+    const status: DeviceData["status"] = sensors || d
       ? isRecent
         ? "online"
         : "offline"
@@ -39,11 +69,13 @@ async function fetchDeviceData(): Promise<DeviceData[]> {
 
     return {
       deviceId: item.device_id ?? "unknown",
-      timestamp: item.timestamp,
+      timestamp: timestampMs,
       logIndex: sensors?.logIndex ?? null,
       status,
-      humidity: sensors?.shtHum ?? item.humidity ?? null,
-      temperature: sensors?.shtTemp ?? item.temperature ?? null,
+      humidity,
+      temperature,
+      latitude,
+      longitude,
       sensors,
     };
   });
@@ -71,6 +103,12 @@ function formatTimestamp(ts: number): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Formats lat/long for display. */
+function formatLatLong(value: number | null | undefined): string {
+  if (value === null || value === undefined || isNaN(value)) return "—";
+  return value.toFixed(4);
 }
 
 /** Returns a status badge color based on device status. */
@@ -119,10 +157,12 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Device ID</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Timestamp</TableHead>
             <TableHead>Temp</TableHead>
             <TableHead>Humidity</TableHead>
+            <TableHead>Lat</TableHead>
+            <TableHead>Long</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Operator</TableHead>
             <TableHead>RSRP</TableHead>
             <TableHead>Band</TableHead>
@@ -139,21 +179,29 @@ export default async function DeviceTable({ className }: DeviceTableProps) {
                 {device.deviceId.replace("monarch_", "").slice(-6)}
               </TableCell>
 
-              {/* Status */}
-              <TableCell className={getStatusColor(device.status)}>
-                {device.status}
-              </TableCell>
-
               {/* Timestamp */}
               <TableCell className="text-xs text-muted-foreground">
                 {formatTimestamp(device.sensors?.timestamp ?? device.timestamp)}
               </TableCell>
 
-              {/* Temperature (shtTemp) */}
+              {/* Temperature */}
               <TableCell>{formatValue(device.temperature, "°C")}</TableCell>
 
-              {/* Humidity (shtHum) */}
+              {/* Humidity */}
               <TableCell>{formatValue(device.humidity, "%")}</TableCell>
+
+              {/* Latitude / Longitude from decoded */}
+              <TableCell className="text-xs font-mono">
+                {formatLatLong(device.latitude)}
+              </TableCell>
+              <TableCell className="text-xs font-mono">
+                {formatLatLong(device.longitude)}
+              </TableCell>
+
+              {/* Status */}
+              <TableCell className={getStatusColor(device.status)}>
+                {device.status}
+              </TableCell>
 
               {/* LTE Operator */}
               <TableCell className="text-xs">
