@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   Table,
   TableBody,
@@ -160,11 +161,13 @@ export default async function DeviceTable({
 
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`}>
-      <DeviceFilter
-        deviceIds={uniqueDeviceIds}
-        currentDeviceId={deviceId}
-        className="shrink-0"
-      />
+      <Suspense fallback={<div className="h-9 shrink-0" />}>
+        <DeviceFilter
+          deviceIds={uniqueDeviceIds}
+          currentDeviceId={deviceId}
+          className="shrink-0"
+        />
+      </Suspense>
       <div className="min-h-0 flex-1 overflow-auto">
       <Table>
         <TableCaption>End of device list.</TableCaption>

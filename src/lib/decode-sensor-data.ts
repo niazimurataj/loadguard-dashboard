@@ -111,12 +111,18 @@ function base64UrlToBase64(base64Url: string): string {
 export function decodeSensorData(
   base64UrlString: string
 ): DecodedSensorData | null {
+  if (!base64UrlString || typeof base64UrlString !== "string") return null;
   try {
     // Step 1: Convert Base64URL → standard Base64
     const base64String = base64UrlToBase64(base64UrlString);
 
-    // Step 2: Base64 decode → compressed bytes
-    const binaryString = atob(base64String);
+    // Step 2: Base64 decode → compressed bytes (may throw InvalidCharacterError)
+    let binaryString: string;
+    try {
+      binaryString = atob(base64String);
+    } catch {
+      return null;
+    }
     const compressedBytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       compressedBytes[i] = binaryString.charCodeAt(i);
@@ -128,15 +134,10 @@ export function decodeSensorData(
       bytes = inflate(compressedBytes);
     } catch {
       // Data might not be compressed (older firmware or compression failed)
-      // Fall back to using the raw decoded bytes
-      console.warn("Decompression failed, trying uncompressed data");
       bytes = compressedBytes;
     }
 
     if (bytes.length !== EXPECTED_UNCOMPRESSED_SIZE) {
-      console.warn(
-        `Unexpected binary size: got ${bytes.length}, expected ${EXPECTED_UNCOMPRESSED_SIZE}`
-      );
       return null;
     }
 
@@ -280,8 +281,7 @@ export function decodeSensorData(
       cinr,
       operatorName,
     };
-  } catch (error) {
-    console.error("Failed to decode sensor data:", error);
+  } catch {
     return null;
   }
 }
